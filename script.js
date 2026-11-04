@@ -1,72 +1,74 @@
-/*=============== SHOW MENU ===============*/
-const navMenu = document.getElementById('nav-menu'),
-      navToggle = document.getElementById('nav-toggle'),
-      navClose = document.getElementById('nav-close')
+/*=============== MOBILE MENU ===============*/
+const navMenu = document.getElementById('nav-menu')
+const navToggle = document.getElementById('nav-toggle')
+const navClose = document.getElementById('nav-close')
+const navLinks = document.querySelectorAll('.nav__link')
 
-/*===== MENU SHOW =====*/
-/* Validate if constant exists */
-if(navToggle){
-    navToggle.addEventListener('click', () =>{
-        navMenu.classList.add('show-menu')
+const setMenuOpen = (open) => {
+    navMenu.classList.toggle('show-menu', open)
+    navToggle.setAttribute('aria-expanded', String(open))
+}
+
+navToggle.addEventListener('click', () => {
+    setMenuOpen(true)
+    navLinks[0].focus()
+})
+
+const closeMenu = () => {
+    setMenuOpen(false)
+    navToggle.focus()
+}
+
+navClose.addEventListener('click', closeMenu)
+document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && navMenu.classList.contains('show-menu') &&
+        navToggle.offsetWidth > 0) {
+        closeMenu()
+    }
+})
+
+navLinks.forEach(link => link.addEventListener('click', () => {
+    if (navMenu.classList.contains('show-menu') && navToggle.offsetWidth > 0) {
+        closeMenu()
+    }
+}))
+
+/*=============== UPDATE SCROLL STATE ===============*/
+const header = document.getElementById('header')
+const scrollUp = document.getElementById('scroll-up')
+const sections = Array.from(document.querySelectorAll('section[id]'))
+
+const updateScrollState = () => {
+    const scrollY = window.scrollY
+    header.classList.toggle('bg-header', scrollY >= 50)
+    scrollUp.classList.toggle('show-scroll', scrollY >= 350)
+
+    const atBottom = Math.ceil(scrollY + window.innerHeight) >=
+        document.documentElement.scrollHeight
+    const sectionPosition = atBottom && scrollY > 0
+        ? document.documentElement.scrollHeight
+        : scrollY + header.offsetHeight
+    let currentSection = sections[0]
+    for (const section of sections) {
+        if (section.offsetTop > sectionPosition) break
+        currentSection = section
+    }
+
+    navLinks.forEach(link => {
+        const active = link.hash === '#' + currentSection.id
+        link.classList.toggle('active-link', active)
+        if (active) {
+            link.setAttribute('aria-current', 'location')
+        } else {
+            link.removeAttribute('aria-current')
+        }
     })
 }
 
-/*===== MENU HIDDEN =====*/
-/* Validate if constant exists */
-if(navClose){
-    navClose.addEventListener('click', () =>{
-        navMenu.classList.remove('show-menu')
-    })
-}
-
-/*=============== REMOVE MENU MOBILE ===============*/
-const navLink = document.querySelectorAll('.nav__link')
-
-const linkAction = () =>{
-    const navMenu = document.getElementById('nav-menu')
-    // When we click on each nav__link, we remove the show-menu class
-    navMenu.classList.remove('show-menu')
-}
-navLink.forEach(n => n.addEventListener('click', linkAction))
-
-/*=============== CHANGE BACKGROUND HEADER ===============*/
-const scrollHeader = () =>{
-    const header = document.getElementById('header')
-    // When the scroll is greater than 50 viewport height, add the scroll-header class to the header tag
-    this.scrollY >= 50 ? header.classList.add('bg-header') 
-                       : header.classList.remove('bg-header')
-}
-window.addEventListener('scroll', scrollHeader)
-
-/*=============== SHOW SCROLL UP ===============*/ 
-const scrollUp = () =>{
-	const scrollUp = document.getElementById('scroll-up')
-    // When the scroll is higher than 350 viewport height, add the show-scroll class to the a tag with the scrollup class
-	this.scrollY >= 350 ? scrollUp.classList.add('show-scroll')
-						: scrollUp.classList.remove('show-scroll')
-}
-window.addEventListener('scroll', scrollUp)
-
-/*=============== SCROLL SECTIONS ACTIVE LINK ===============*/
-const sections = document.querySelectorAll('section[id]')
-    
-const scrollActive = () =>{
-  	const scrollDown = window.scrollY
-
-	sections.forEach(current =>{
-		const sectionHeight = current.offsetHeight,
-			  sectionTop = current.offsetTop - 58,
-			  sectionId = current.getAttribute('id'),
-			  sectionsClass = document.querySelector('.nav__menu a[href*=' + sectionId + ']')
-
-		if(scrollDown > sectionTop && scrollDown <= sectionTop + sectionHeight){
-			sectionsClass.classList.add('active-link')
-		}else{
-			sectionsClass.classList.remove('active-link')
-		}                                                    
-	})
-}
-window.addEventListener('scroll', scrollActive)
+window.addEventListener('scroll', updateScrollState)
+window.addEventListener('resize', updateScrollState)
+window.addEventListener('pageshow', updateScrollState)
+updateScrollState()
 
 /*=============== PARALLAX ===============*/
 let parallax = new Rellax('.parallax');
